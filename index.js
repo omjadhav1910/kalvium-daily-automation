@@ -2,11 +2,10 @@ const { chromium } = require('@playwright/test');
 
 const BACKUP_TASK = `
 📋 Tasks completed today :
-• Worked on assigned tasks.
-• Attended standup
+• Worked on testcase automation tasks.
 
 ⚡ Challenges encountered and how you overcame them
-• Faced no difficulty
+• Faced no Challenges
 
 🚧 Blockers faced (challenges that you couldn't overcome)
 • No blockers faced

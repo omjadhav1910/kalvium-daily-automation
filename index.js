@@ -1,6 +1,5 @@
 const { chromium } = require('@playwright/test');
 
-/* ✅ Static data only */
 const BACKUP_TASK = `
 📋 Tasks completed today :
 • Worked on assigned tasks.
@@ -14,13 +13,14 @@ const BACKUP_TASK = `
 `.trim();
 
 (async () => {
-  // ✅ Directly use static text (no Google Sheets)
   const finalText = BACKUP_TASK;
 
   const browser = await chromium.launch({ headless: true });
 
   const context = await browser.newContext({
-    storageState: JSON.parse(process.env.AUTH_STATE)
+    storageState: process.env.AUTH_STATE
+      ? JSON.parse(process.env.AUTH_STATE)
+      : undefined
   });
 
   const page = await context.newPage();
@@ -33,30 +33,36 @@ const BACKUP_TASK = `
   await page.click('text=Complete');
   await page.click('button[role="combobox"]');
   await page.waitForSelector('[role="option"]');
-
-  // Select first dropdown option
   await page.locator('[role="option"]').first().click();
 
-  // ===== EDITOR PART (UNCHANGED) =====
   const editor = page.locator('div[contenteditable="true"]').first();
-
   await editor.waitFor({ timeout: 10000 });
   await editor.click();
+  await editor.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+  await editor.type(finalText, { delay: 5 });
 
-  await editor.press(
-    process.platform === 'darwin' ? 'Meta+A' : 'Control+A'
+  // Force TipTap update
+  await editor.press('Enter');
+  await page.waitForTimeout(500);
+
+  // Scroll modal
+  await page.evaluate(() => {
+    const modal = document.querySelector('[role="dialog"]');
+    if (modal) modal.scrollTop = modal.scrollHeight;
+  });
+
+  // Submit
+  const submitBtn = page.locator('button[type="submit"]:has-text("Submit")');
+  await submitBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await submitBtn.click();
+
+  // Confirm submission
+  await page.waitForSelector(
+    'button[type="submit"]:has-text("Submit")',
+    { state: 'detached', timeout: 10000 }
   );
 
-  await editor.type(finalText, { delay: 5 });
-  // ==================================
-
-// Wait a bit to ensure editor updates are registered
-await page.waitForTimeout(1000);
-
-// Click Submit
-const submitBtn = page.locator('button[type="submit"]:has-text("Submit")');
-await submitBtn.waitFor({ state: 'visible', timeout: 10000 });
-await submitBtn.click();
-
+  // Allow network to finish
+  await page.waitForTimeout(2000);
   await browser.close();
 })();

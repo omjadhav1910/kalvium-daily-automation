@@ -54,9 +54,9 @@ const BACKUP_TASK = `
 await page.waitForTimeout(1000);
 
 // Click Submit
-// const submitBtn = page.locator('button[type="submit"]:has-text("Submit")');
-// await submitBtn.waitFor({ state: 'visible', timeout: 10000 });
-// await submitBtn.click();
+const submitBtn = page.locator('button[type="submit"]:has-text("Submit")');
+await submitBtn.waitFor({ state: 'visible', timeout: 10000 });
+await submitBtn.click();
 
   await browser.close();
 })();

@@ -1,45 +1,21 @@
 const { chromium } = require('@playwright/test');
-const { GoogleSpreadsheet } = require('google-spreadsheet');
 
-const BACKUP_TASK = 'Worked on assigned internship tasks.';
-
-async function getTodayTask() {
-  try {
-    const doc = new GoogleSpreadsheet(process.env.SHEET_ID);
-    const creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-
-    await doc.useServiceAccountAuth({
-      client_email: creds.client_email,
-      private_key: creds.private_key
-    });
-
-    await doc.loadInfo();
-    const sheet = doc.sheetsByTitle['daily'];
-    const rows = await sheet.getRows();
-
-    const today = new Date().toISOString().split('T')[0];
-    const row = rows.find(r => r.date === today);
-
-    if (!row || !row.tasks) return BACKUP_TASK;
-    return row.tasks;
-  } catch {
-    return BACKUP_TASK;
-  }
-}
-
-(async () => {
-  const taskText = await getTodayTask();
-
-  const finalText = `
+/* ✅ Static data only */
+const BACKUP_TASK = `
 📋 Tasks completed today :
-${taskText}
+• Worked on assigned tasks.
+• Attended standup
 
 ⚡ Challenges encountered and how you overcame them
 • Faced no difficulty
 
 🚧 Blockers faced (challenges that you couldn't overcome)
 • No blockers faced
-`;
+`.trim();
+
+(async () => {
+  // ✅ Directly use static text (no Google Sheets)
+  const finalText = BACKUP_TASK;
 
   const browser = await chromium.launch({ headless: true });
 
@@ -50,13 +26,37 @@ ${taskText}
   const page = await context.newPage();
 
   await page.goto('https://kalvium.community/internships', {
-    waitUntil: 'networkidle'
+    waitUntil: 'domcontentloaded'
   });
+  await page.waitForTimeout(3000);
 
-  await page.click('text=Submit Form');
-  await page.selectOption('select', { index: 0 });
-  await page.fill('textarea', finalText);
-  await page.click('button:has-text("Submit")');
+  await page.click('text=Complete');
+  await page.click('button[role="combobox"]');
+  await page.waitForSelector('[role="option"]');
+
+  // Select first dropdown option
+  await page.locator('[role="option"]').first().click();
+
+  // ===== EDITOR PART (UNCHANGED) =====
+  const editor = page.locator('div[contenteditable="true"]').first();
+
+  await editor.waitFor({ timeout: 10000 });
+  await editor.click();
+
+  await editor.press(
+    process.platform === 'darwin' ? 'Meta+A' : 'Control+A'
+  );
+
+  await editor.type(finalText, { delay: 5 });
+  // ==================================
+
+// Wait a bit to ensure editor updates are registered
+await page.waitForTimeout(1000);
+
+// Click Submit
+// const submitBtn = page.locator('button[type="submit"]:has-text("Submit")');
+// await submitBtn.waitFor({ state: 'visible', timeout: 10000 });
+// await submitBtn.click();
 
   await browser.close();
 })();

@@ -2,7 +2,8 @@ name: Kalvium Daily Report
 
 on:
   schedule:
-      - cron: '0 0 * * 1-5'   # Mon–Fri, 5:30 PM IST (12:00 AM UTC next day)   # Mon–Fri, 5:30 PM IST
+    - cron: '*/5 * * * *'     # TEMP: runs every 5 minutes (will trigger soon)
+    - cron: '0 0 * * 1-5'     # Mon–Fri, 5:30 PM IST (12:00 AM UTC)
   workflow_dispatch:
 
 jobs:
@@ -37,10 +38,8 @@ jobs:
           from: Kalvium Automation <${{ secrets.EMAIL_USERNAME }}>
           body: |
             ❌ Kalvium daily automation failed.
-
             Repo: ${{ github.repository }}
             Workflow: ${{ github.workflow }}
             Branch: ${{ github.ref_name }}
-
             Run link:
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

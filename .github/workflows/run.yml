@@ -30,8 +30,15 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 587
+          # EMAIL_USERNAME must be the Gmail address for the account where the App Password was created.
           username: ${{ secrets.EMAIL_USERNAME }}
+          # EMAIL_PASSWORD must be a Gmail App Password (Google Account -> Security -> App Passwords), not a regular password.
           password: ${{ secrets.EMAIL_PASSWORD }}
+          # Troubleshooting when updating Gmail credentials:
+          # - Ensure 2-Step Verification (2FA) is enabled on the Gmail account.
+          # - Generate/re-generate an App Password and save it in EMAIL_PASSWORD.
+          # - Keep EMAIL_USERNAME and EMAIL_PASSWORD from the same Gmail account.
+          # - Do not use regular Gmail passwords; SMTP auth can fail or time out.
           subject: ❌ Kalvium Daily Report FAILED
           to: ${{ secrets.EMAIL_TO }}
           from: Kalvium Automation <${{ secrets.EMAIL_USERNAME }}>

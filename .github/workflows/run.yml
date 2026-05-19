@@ -8,7 +8,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-
+  
     steps:
       - uses: actions/checkout@v4
 
@@ -23,6 +23,14 @@ jobs:
         run: npm start
         env:
           AUTH_STATE: ${{ secrets.AUTH_STATE }}
+
+      - name: Upload error screenshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-screenshot
+          path: error-screenshot.png
+          retention-days: 7
 
       - name: Send failure email
         if: failure()
@@ -49,3 +57,4 @@ jobs:
             Branch: ${{ github.ref_name }}
             Run link:
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
